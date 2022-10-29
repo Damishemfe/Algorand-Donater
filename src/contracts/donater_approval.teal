@@ -1,0 +1,159 @@
+#pragma version 6
+txn ApplicationID
+int 0
+==
+bnz main_l12
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l11
+txna ApplicationArgs 0
+byte "donate"
+==
+bnz main_l8
+txna ApplicationArgs 0
+byte "pause"
+==
+bnz main_l7
+txna ApplicationArgs 0
+byte "resume"
+==
+bnz main_l6
+err
+main_l6:
+global GroupSize
+int 1
+==
+txn NumAppArgs
+int 1
+==
+&&
+byte "owner"
+app_global_get
+txn Sender
+==
+&&
+assert
+byte "receiving"
+int 1
+app_global_put
+int 1
+return
+main_l7:
+global GroupSize
+int 1
+==
+txn NumAppArgs
+int 1
+==
+&&
+byte "owner"
+app_global_get
+txn Sender
+==
+&&
+assert
+byte "receiving"
+int 0
+app_global_put
+int 1
+return
+main_l8:
+global GroupSize
+int 2
+==
+txn NumAppArgs
+int 2
+==
+&&
+byte "receiving"
+app_global_get
+int 1
+==
+&&
+assert
+gtxn 1 TypeEnum
+int pay
+==
+gtxn 1 Receiver
+byte "owner"
+app_global_get
+==
+&&
+gtxn 1 Amount
+txna ApplicationArgs 1
+btoi
+==
+&&
+gtxn 1 Sender
+gtxn 0 Sender
+==
+&&
+assert
+byte "amount"
+byte "amount"
+app_global_get
+txna ApplicationArgs 1
+btoi
++
+app_global_put
+txna ApplicationArgs 1
+btoi
+byte "goal"
+app_global_get
+>=
+bnz main_l10
+main_l9:
+int 1
+return
+main_l10:
+byte "reached"
+int 1
+app_global_put
+b main_l9
+main_l11:
+txn Sender
+global CreatorAddress
+==
+return
+main_l12:
+txn NumAppArgs
+int 4
+==
+assert
+txn Note
+byte "donater:uvMain1.0"
+==
+assert
+txna ApplicationArgs 3
+btoi
+int 0
+>
+assert
+byte "name"
+txna ApplicationArgs 0
+app_global_put
+byte "desc"
+txna ApplicationArgs 1
+app_global_put
+byte "image"
+txna ApplicationArgs 2
+app_global_put
+byte "goal"
+txna ApplicationArgs 3
+btoi
+app_global_put
+byte "amount"
+int 0
+app_global_put
+byte "reached"
+int 0
+app_global_put
+byte "receiving"
+int 1
+app_global_put
+byte "owner"
+txn Sender
+app_global_put
+int 1
+return
