@@ -3,7 +3,6 @@ from pyteal import *
 
 class Donater:
     class Variables:
-        owner = Bytes("owner")
         title = Bytes("name")
         description = Bytes("desc")
         image = Bytes("image")
@@ -24,7 +23,14 @@ class Donater:
             # check for transaction note
             Assert(Txn.note() == Bytes("donater:uvMain1.0")),
             # make sure goal is greater than zero
-            Assert(Btoi(Txn.application_args[3]) > Int(0)),
+            Assert(
+                And(
+                    Len(Txn.application_args[0]) > Int(0),
+                    Len(Txn.application_args[1]) > Int(0),
+                    Len(Txn.application_args[2]) > Int(0),
+                    Btoi(Txn.application_args[3]) > Int(0),
+                )
+            ),
             App.globalPut(self.Variables.title, Txn.application_args[0]),
             App.globalPut(self.Variables.description, Txn.application_args[1]),
             App.globalPut(self.Variables.image, Txn.application_args[2]),
@@ -35,7 +41,6 @@ class Donater:
                           Int(0)),
             App.globalPut(self.Variables.isReceiving,
                           Int(1)),
-            App.globalPut(self.Variables.owner, Txn.sender()),
             Approve()
         ])
 
@@ -49,6 +54,7 @@ class Donater:
                     Global.group_size() == Int(2),
                     # check length of transactions equals 2
                     Txn.application_args.length() == Int(2),
+                    Global.creator_address() != Txn.sender(),
                     # check if donations are allowed to be received
                     App.globalGet(self.Variables.isReceiving) == Int(1)
                 ),
@@ -58,8 +64,7 @@ class Donater:
                 And(
                     Gtxn[1].type_enum() == TxnType.Payment,
                     # make sure the receiver is the owner
-                    Gtxn[1].receiver() == App.globalGet(
-                        self.Variables.owner),
+                    Gtxn[1].receiver() == Global.creator_address(),
                     # make sure the amount corresponds to the input
                     Gtxn[1].amount() == Btoi(Txn.application_args[1]),
                     Gtxn[1].sender() == Gtxn[0].sender(),
@@ -78,11 +83,11 @@ class Donater:
         return Seq([
             Assert(
                 And(
-                    Global.group_size() == Int(1),
                     # check length of transactions equals 1
                     Txn.application_args.length() == Int(1),
                     # is the user the owner
-                    App.globalGet(self.Variables.owner) == Txn.sender()
+                    Global.creator_address() == Txn.sender(),
+                    App.globalGet(self.Variables.isReceiving) == Int(1),
                 ),
             ),
             App.globalPut(self.Variables.isReceiving, Int(0)),
@@ -93,11 +98,10 @@ class Donater:
         return Seq([
             Assert(
                 And(
-                    Global.group_size() == Int(1),
-                    # check length of transactions equals 1
                     Txn.application_args.length() == Int(1),
                     # is the user the owner
-                    App.globalGet(self.Variables.owner) == Txn.sender()
+                    Global.creator_address() == Txn.sender(),
+                    App.globalGet(self.Variables.isReceiving) == Int(0),
                 ),
             ),
             App.globalPut(self.Variables.isReceiving, Int(1)),
