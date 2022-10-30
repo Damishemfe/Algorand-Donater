@@ -280,7 +280,7 @@ const getApplication = async (appId) => {
 
         // 2. Parse fields of response and return product
         let creator = response.application.params.creator
-        let owner = ""
+        let owner = response.application.params.creator
         let title = ""
         let description = ""
         let image = ""
@@ -325,11 +325,6 @@ const getApplication = async (appId) => {
 
         if (getField("receiving", globalState) !== undefined) {
             isReceiving = getField("receiving", globalState).value.uint
-        }
-
-        if (getField("owner", globalState) !== undefined) {
-            let field = getField("owner", globalState).value.bytes;
-            owner = getAddress(field);
         }
 
         return new Donater(creator, owner, title, description, image, goal, amountDonated, goal_reached, isReceiving, appId)
