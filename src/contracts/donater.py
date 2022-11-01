@@ -11,6 +11,8 @@ class Donater:
         amountDonated = Bytes("amount")
         goalReached = Bytes("reached")
         isReceiving = Bytes("receiving")
+        donating_ends = Bytes("donating ends")
+        timer = Int(360) #timer is in seconds
 
     # app methods
     class AppMethods:
@@ -36,26 +38,32 @@ class Donater:
             App.globalPut(self.Variables.isReceiving,
                           Int(1)),
             App.globalPut(self.Variables.owner, Txn.sender()),
+            
+            App.globalPut(
+                self.Variables.donating_ends,
+                Global.latest_timestamp() + self.Variables.timer),
             Approve()
         ])
 
     def donate(self):
         amount_donated = Btoi(Txn.application_args[1])
         goal = App.globalGet(self.Variables.goal)
-        return Seq([
+        
+        if_timer_ends = Seq([
+            App.globalPut(self.Variables.isReceiving, Int(0)),
+            Approve()
+        ])
+        if_donation_active =  Seq([
             Assert(
                 #check for group size and 
                 And(
+                    #owner cant donate
+                    Txn.sender() != App.globalGet(self.Variables.owner),
                     Global.group_size() == Int(2),
                     # check length of transactions equals 2
                     Txn.application_args.length() == Int(2),
                     # check if donations are allowed to be received
-                    App.globalGet(self.Variables.isReceiving) == Int(1)
-                ),
-            ),
-            Assert(
-                
-                And(
+                    App.globalGet(self.Variables.isReceiving) == Int(1),
                     Gtxn[1].type_enum() == TxnType.Payment,
                     # make sure the receiver is the owner
                     Gtxn[1].receiver() == App.globalGet(
@@ -63,9 +71,8 @@ class Donater:
                     # make sure the amount corresponds to the input
                     Gtxn[1].amount() == Btoi(Txn.application_args[1]),
                     Gtxn[1].sender() == Gtxn[0].sender(),
-                )
+                ),
             ),
-
             # update amount_donated
             App.globalPut(self.Variables.amountDonated, 
                           App.globalGet(self.Variables.amountDonated) + Btoi(Txn.application_args[1])),    
@@ -73,6 +80,8 @@ class Donater:
             If(amount_donated >= goal).Then(App.globalPut(self.Variables.goalReached, Int(1))),
             Approve()
         ])
+
+        return If( Global.latest_timestamp() >= App.globalGet(self.Variables.donating_ends)).Then(if_timer_ends).Else(if_donation_active)
 
     def pause(self):
         return Seq([
