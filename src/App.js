@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import { indexerClient, myAlgoConnect } from "./utils/constants";
 
 import { ToastContainer, toast } from 'react-toastify';
@@ -60,7 +60,7 @@ function App() {
       await addDonationAction(address, data)    
     } catch (error) {
       console.log(error);
-      toast.error(error)
+      toast.error("Error in Add Function, check logs")
     } finally {
       getDonations();
       fetchBalance()
@@ -73,7 +73,7 @@ function App() {
       await donateAction(address, data,stringToMicroAlgos(amount))
     } catch (error) {
       console.log(error);
-      toast.error(error)
+      toast.error("Error in Donate Function, check logs")
     } finally {
       getDonations();
       fetchBalance();
@@ -86,7 +86,7 @@ function App() {
       await pauseAction(address, data)
     } catch (error) {
       console.log(error);
-      toast.error(error)
+      toast.error("Error in Pause Function, check logs")
     } finally {
       getDonations();
       fetchBalance();
@@ -99,7 +99,7 @@ function App() {
       await resumeAction(address, data)
     } catch (error) {
       console.log(error);
-      toast.error(error)
+      toast.error("Error in Resume Function, check logs")
     } finally {
       getDonations();
       fetchBalance();

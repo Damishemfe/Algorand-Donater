@@ -265,7 +265,6 @@ export const getProjectAction = async () => {
             }
         }
     }
-    console.log(posts);
     return posts
 }
 
